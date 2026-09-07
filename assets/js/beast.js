@@ -794,11 +794,73 @@ export function drawBeast(ctx, g, opts = {}) {
   const fgRng = rng.fork('fg')
 
   if (!opts.cutout) drawBackdrop(ctx, g, backdropRng, noise)
-  drawWings(ctx, g, wingsRng, noise)
-  drawBody(ctx, g, bodyRng, noise)
-  drawHead(ctx, g, headRng, noise)
-  drawCompanion(ctx, g, compRng, noise)
+
+  // The figure is assembled on its own layer so it can be modelled as one solid
+  // afterwards. Shading each limb separately never agrees at the joints, and a
+  // torso that is one flat slab of colour is what makes a generated figure read
+  // as a paper doll no matter how well the head is drawn.
+  const fig = document.createElement('canvas')
+  fig.width = W
+  fig.height = H
+  const fctx = fig.getContext('2d')
+
+  drawWings(fctx, g, wingsRng, noise)
+  drawBody(fctx, g, bodyRng, noise)
+  drawHead(fctx, g, headRng, noise)
+  drawCompanion(fctx, g, compRng, noise)
+  modelFigure(fctx, g)
+
+  ctx.drawImage(fig, 0, 0)
   if (!opts.cutout) drawForeground(ctx, g, fgRng, noise)
+  ctx.restore()
+}
+
+/**
+ * Directional modelling over the assembled figure.
+ *
+ * `source-atop` confines both gradients to pixels the figure already painted, so
+ * one pass gives every limb, the torso and the skull a consistent lit side and
+ * shadow side that agree at the joints.
+ *
+ * The light angle is derived from the seed through its OWN generator rather than
+ * from the shared stream: taking it from `rng` would consume a draw and shift
+ * every fork after it, which would repaint beasts whose links are already out.
+ */
+function modelFigure(ctx, g) {
+  const from = makeRng((g.seed ^ 0x9e3779b9) >>> 0)
+  const dir = from.next() < 0.5 ? -1 : 1        // which side the light is on
+  const strength = 0.30 + from.next() * 0.16
+
+  ctx.save()
+  ctx.globalCompositeOperation = 'source-atop'
+
+  // Core shadow across the body, perpendicular to the light.
+  const x0 = dir > 0 ? W : 0
+  const x1 = dir > 0 ? 0 : W
+  const side = ctx.createLinearGradient(x0, 0, x1, 0)
+  side.addColorStop(0, 'rgba(10,8,14,0)')
+  side.addColorStop(0.52, `rgba(10,8,14,${strength * 0.38})`)
+  side.addColorStop(1, `rgba(10,8,14,${strength * 0.86})`)
+  ctx.fillStyle = side
+  ctx.fillRect(0, 0, W, H)
+
+  // Ambient occlusion, kept close to the ground. Run up the whole lower body it
+  // stacks with the side shadow and swallows the legs entirely — which is what
+  // it did at H*0.52 and 0.85 strength. It only has to darken where the figure
+  // meets the floor.
+  const down = ctx.createLinearGradient(0, H * 0.82, 0, GROUND + 30)
+  down.addColorStop(0, 'rgba(8,6,10,0)')
+  down.addColorStop(1, `rgba(8,6,10,${strength * 0.5})`)
+  ctx.fillStyle = down
+  ctx.fillRect(0, 0, W, H)
+
+  // A cool rim on the lit side, so the silhouette separates from the ground.
+  const rim = ctx.createLinearGradient(x1, 0, x0, 0)
+  rim.addColorStop(0, 'rgba(255,246,225,0.14)')
+  rim.addColorStop(0.22, 'rgba(255,246,225,0)')
+  ctx.fillStyle = rim
+  ctx.fillRect(0, 0, W, H)
+
   ctx.restore()
 }
 
