@@ -377,8 +377,101 @@ function drawHead(ctx, g, rng, noise) {
   if (spec.horn === 'straight') drawStraightHorns(ctx, p, rng, cx, cy, s)
   if (spec.horn === 'tusk') drawTusks(ctx, p, rng, cx, cy, s, f)
 
+  drawMarkings(ctx, g, rng, cx, cy, cw, ch, s, f)
+
+  // The far eye, on the other side of a three-quarter head. Smaller, dimmer and
+  // pushed toward the edge of the skull. Without it every animal in the set has
+  // one eye and reads as a mask rather than as a head with a far side.
+  if (!spec.beak) {
+    ctx.globalAlpha = 0.72
+    drawEye(ctx, p, rng, cx - f * cw * 0.42, cy - ch * 0.13, s * 0.74)
+    ctx.globalAlpha = 1
+  }
   drawEye(ctx, p, rng, cx + f * cw * 0.34, cy - ch * 0.16, s)
   if (g.crown !== 'none') drawCrown(ctx, g, rng, noise, cx, cy - ch * 1.02, s)
+  ctx.restore()
+}
+
+/**
+ * Species markings on the skull.
+ *
+ * Without these every head is a plain oval and the animal is carried entirely by
+ * whatever is bolted to the top of it — tiger, cat and hare come out identical.
+ * Markings are clipped to the cranium so they wrap the form instead of floating.
+ */
+function drawMarkings(ctx, g, rng, cx, cy, cw, ch, s, f) {
+  const p = g.palette
+  const dark = shade(p.fur[0], -0.5)
+  const pale = shade(p.fur[1] ?? p.fur[0], 0.42)
+
+  ctx.save()
+  ctx.beginPath()
+  ctx.ellipse(cx, cy, cw * 1.02, ch * 1.02, 0, 0, Math.PI * 2)
+  ctx.clip()
+
+  const stripes = (n, col, alpha, len) => {
+    ctx.globalAlpha = alpha
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n
+      const x = cx - cw + t * cw * 2
+      const lean = (x - cx) * 0.22
+      slab(ctx, x - lean, cy - ch * 1.05, x + lean, cy - ch * (1.05 - len),
+        s * rng.range(0.022, 0.05), col, rng)
+    }
+    ctx.globalAlpha = 1
+  }
+
+  const patches = (n, col, alpha) => {
+    ctx.globalAlpha = alpha
+    for (let i = 0; i < n; i++) {
+      shape(ctx, ellipsePts(cx + rng.range(-cw, cw), cy + rng.range(-ch, ch),
+        rng.range(cw * 0.28, cw * 0.62), rng.range(ch * 0.24, ch * 0.55), 16,
+        rng.range(0, 3)), col, [col], rng, (x) => 0.5,
+        { rough: 6, seed: 600 + i, strokes: 6, width: 12, alpha: 0.2 })
+    }
+    ctx.globalAlpha = 1
+  }
+
+  switch (g.head) {
+    case 'tiger': stripes(7, dark, 0.72, 0.95); break
+    case 'cat': stripes(5, dark, 0.5, 0.7); break
+    case 'boar':
+      stripes(9, dark, 0.4, 0.45)
+      break
+    case 'bull': patches(2, pale, 0.6); break
+    case 'horse':
+      // A blaze straight down the face.
+      ctx.globalAlpha = 0.72
+      slab(ctx, cx + f * cw * 0.18, cy - ch, cx + f * cw * 0.5, cy + ch, s * 0.075, pale, rng)
+      ctx.globalAlpha = 1
+      break
+    case 'hare':
+      ctx.globalAlpha = 0.6
+      slab(ctx, cx, cy - ch, cx + f * cw * 0.4, cy + ch * 0.8, s * 0.055, pale, rng)
+      ctx.globalAlpha = 1
+      break
+    case 'stag':
+    case 'antelope':
+      // Pale muzzle band and a dark eye patch — the deer face in two marks.
+      ctx.globalAlpha = 0.62
+      slab(ctx, cx + f * cw * 0.3, cy + ch * 0.35, cx + f * cw * 1.1, cy + ch * 0.42,
+        s * 0.07, pale, rng)
+      ctx.globalAlpha = 0.5
+      shape(ctx, ellipsePts(cx + f * cw * 0.34, cy - ch * 0.16, cw * 0.3, ch * 0.26, 14),
+        dark, [dark], rng, () => 0.5, { rough: 4, seed: 611, strokes: 4, width: 10, alpha: 0.2 })
+      ctx.globalAlpha = 1
+      break
+    case 'ram':
+      patches(1, pale, 0.4)
+      break
+    default:
+      // Birds: a cap or cheek patch in a wing colour.
+      ctx.globalAlpha = 0.55
+      shape(ctx, ellipsePts(cx, cy - ch * 0.5, cw * 0.9, ch * 0.55, 16),
+        rng.pick(p.wing), [rng.pick(p.wing)], rng, () => 0.5,
+        { rough: 5, seed: 612, strokes: 5, width: 10, alpha: 0.2 })
+      ctx.globalAlpha = 1
+  }
   ctx.restore()
 }
 
