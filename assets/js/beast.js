@@ -810,9 +810,54 @@ export function drawBeast(ctx, g, opts = {}) {
   drawCompanion(fctx, g, compRng, noise)
   modelFigure(fctx, g)
 
+  // Framing is applied when the figure layer is composited, not while it is
+  // drawn, so it costs one transform and cannot disturb any of the anatomy.
+  const fr = framing(g)
+  ctx.save()
+  ctx.translate(fr.tx, 0)
+  ctx.translate(fr.ax, fr.ay)
+  ctx.scale(fr.scale, fr.scale)
+  ctx.translate(-fr.ax, -fr.ay)
   ctx.drawImage(fig, 0, 0)
+  ctx.restore()
   if (!opts.cutout) drawForeground(ctx, g, fgRng, noise)
   ctx.restore()
+}
+
+/**
+ * How the figure is framed in the picture.
+ *
+ * Twenty-four beasts all standing dead centre at one scale on one ground line is
+ * a character sheet, not a body of paintings — it was the loudest remaining
+ * defect on the contact sheet once the anatomy was right.
+ *
+ * Like the light angle, this is drawn from its own generator seeded off g.seed
+ * rather than from the shared stream. Adding a field to genome() would consume a
+ * value there and silently repaint every beast whose link is already out.
+ *
+ * Each mode names its own anchor so the scaling pivots somewhere useful: CLOSE
+ * pivots at the chest, so the head stays in frame and the crop lands at the
+ * waist; DISTANT pivots at the ground, so the feet stay planted.
+ */
+export function framing(g) {
+  const r = makeRng((g.seed ^ 0x85ebca6b) >>> 0)
+  const mode = r.weighted([['full', 5], ['close', 3], ['distant', 2], ['edge', 2]])
+  switch (mode) {
+    case 'close':
+      // Pivot near the skull rather than the chest. Scaling about a low anchor
+      // multiplies the distance up to the horns and antlers and pushes them off
+      // the top of the frame — at 1.68 about y=520 it removed whole heads.
+      return { mode, scale: r.range(1.26, 1.44), ax: W / 2, ay: 470, tx: r.range(-40, 40) }
+    case 'distant':
+      return { mode, scale: r.range(0.68, 0.80), ax: W / 2, ay: GROUND, tx: r.range(-90, 90) }
+    case 'edge':
+      return {
+        mode, scale: r.range(1.05, 1.25), ax: W / 2, ay: 700,
+        tx: (r.next() < 0.5 ? -1 : 1) * r.range(150, 260),
+      }
+    default:
+      return { mode, scale: 1, ax: W / 2, ay: 700, tx: 0 }
+  }
 }
 
 /**

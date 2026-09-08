@@ -8,6 +8,7 @@
  */
 
 import { makeRng } from './rng.js'
+import { framing } from './beast.js'
 
 const HEAD_NOUN = {
   ram: 'Ram', bull: 'Bull', antelope: 'Antelope', stag: 'Stag', tiger: 'Tiger',
@@ -107,6 +108,7 @@ export function traits(g) {
     ['Companion', g.companion],
     ['Palette', g.palette.name],
     ['Stance', g.stance],
+    ['Framing', framing(g).mode],
   ]
 }
 
