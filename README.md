@@ -1,108 +1,50 @@
-# BESTIARY
+﻿# Bestiary
 
-Type a name. It becomes a beast.
+Find your other nature. A name becomes a repeatable, surreal collage creature.
 
-> Every beast is a number. No models, no textures, no image files — every mark on
-> screen is drawn from one integer, in the browser, at the moment you ask for it.
+Production: https://bestiary-livid.vercel.app
 
-A companion to [LODHANG](../lodhang-archive), the archive of eleven collage-paintings
-by jaka lodhang. The archive is the museum; this is the generator. Same vault, same
-warm-black ramp, same rule that the site owns no colour: every palette here is lifted
-from a specific painting in that archive, which is the main reason a hundred generated
-beasts look like one body of work instead of a hundred unrelated doodles.
+## What it does
 
----
+- Name lookup with case, whitespace and Unicode normalization.
+- Six animal natures, six source settings, head swaps, torn fragments and seeded paint marks.
+- Random discovery and a touch-scrollable portrait rail.
+- Local photo hashing: the same file produces the same creature. Photos are never uploaded and are not interpreted as a likeness.
+- Stable share links, browser back/forward navigation and 1600 × 2400 PNG downloads.
+- A local cabinet of up to 60 saved creatures, with remove and reopen actions.
+- Keyboard access, native modal focus management, reduced motion and mobile layouts.
 
-## How it works
+The artwork uses fragments from the supplied screenshot references. It is not freshly generated AI artwork: image generation was unavailable during this iteration. See [ART_SOURCES.md](ART_SOURCES.md) for attribution and source mappings. The remixes are independent compositions, not new works by the reference artist.
 
-A name is normalised (`"Ada Lovelace"`, `"ada  lovelace"` and `"ADA LOVELACE"` are one
-beast, not three), hashed with FNV-1a, and reduced to an eight-digit seed. That seed
-seeds a `mulberry32` stream, and every decision in the genome and every mark in the
-drawing comes out of it. `Math.random` appears in exactly one place — choosing which
-beast to *show* you when you press **+** — and never inside the drawing.
+## Run and check
 
-So a link is a permanent address for a picture:
-
-```
-/?name=ada%20lovelace
-/?seed=36619034
-```
-
-Both reproduce the same beast, on any machine, with nothing stored anywhere.
-
-The stream is **forked per body part**. That is not tidiness: seeds are permanent
-links, so if adding a decision to the head code shifted the palette of an
-already-published beast, that would be a correctness bug.
-
-## Anatomy
-
-Fixed anatomy, variable parts — which is what keeps the set coherent. Drawing is
-strictly back to front, because the source is a collage and the seams between layers
-are meant to show.
-
-```
-backdrop (torn colour fields, sky band, tropical foliage)
-  wings (spread / folded / none)
-    body (armour / drapery / bare / fleece) + legs + arms + whatever it is holding
-      head (one of twelve animals) + horns / beak / ears + crown / helm / halo / wreath
-        companion (cat / bird / dog)
-          foreground (datamosh bars, drips, an edge strip, vignette)
-```
-
-Twelve heads, four bodies, five headpieces, five held objects, three wing states,
-four companions, eleven palettes, two stances. The **uncommonness** score on each
-plate is the product of the actual weights in the genome mapped through `-log10` —
-a real number, not flattery.
-
-## The look
-
-`assets/js/paint.js` carries the whole visual argument. Four rules, none optional:
-
-- **No edge is ever straight or clean.** Every boundary is subdivided and jittered
-  along its normal, the way torn paper is.
-- **No area is ever one flat colour.** Fills are scumbled with broken strokes of
-  neighbouring palette colours. A flat fill is the single biggest tell of generated art.
-- **Seams stay visible.** Layers are not blended into each other.
-- **Hard intrusions cut straight across.** Glitch bars and flat rectangles do not
-  respect the figure, because in the source work they never do.
-
----
-
-## Run it
+Requires Node 22+ and Python 3 for the local server.
 
 ```sh
-python tools/serve.py            # http://127.0.0.1:8789
+npm ci
+npm run dev
+# http://127.0.0.1:8789
 ```
 
-Static — plain HTML, CSS and ES modules. No build step, no bundler, no dependencies.
-
-## Look at it
+In another terminal:
 
 ```sh
-node tools/shot.mjs --url http://127.0.0.1:8789/ --out shots/summon.png
-node tools/shot.mjs --url "http://127.0.0.1:8789/?name=akbar" --out shots/result.png
+npm test
+npx playwright install chromium
+npm run test:browser
+npm run build
 ```
 
-`dev-sheet.html` renders a contact sheet of two dozen beasts at once — the fastest way
-to judge whether a change to the generator helped or hurt. Judge changes on the sheet,
-never on one beast.
+Browser checks cover name determinism, PNG export dimensions, sharing, saved cabinet persistence, photo hashing, invalid seeds, markup safety, history, focus, keyboard access and 320/390/768px layouts. Captures and reports go into ignored `output/playwright/`.
 
-## Files
+## Art and rendering
 
-| File | What it is |
-|---|---|
-| `assets/js/rng.js` | Hashing, the seeded PRNG, forked streams, value noise. |
-| `assets/js/paint.js` | Torn edges, scumbled fills, palette-knife slabs, glitch bars, drips, grain. |
-| `assets/js/beast.js` | The genome and the whole figure. |
-| `assets/js/palette.js` | Eleven palettes, each lifted from one painting, with colours assigned to *roles* rather than listed as swatches. |
-| `assets/js/naming.js` | Titles and plate copy. Only ever describes what is actually in the picture. |
-| `assets/js/undergrowth.js` | The painted meadow the beasts stand in. |
+`assets/js/collage.js` selects a source setting and an animal head, places the head at a recorded anatomical landmark, and adds seeded torn fragments. Canvas source crops exclude captured social UI. Source files are only WebP-encoded for delivery; the live canvas performs composition. There is no runtime image-generation API, backend or paid service.
 
----
+`assets/js/rng.js` maps names to eight-digit seeds. The renderer uses only seeded randomness. The artwork system is version 2; older bare name/seed links resolve to the current visual renderer. The historical procedural renderer remains in `beast.js` and its supporting modules for reference.
+
+`DESIGN.md` records the design vocabulary. The production build copies only HTML and assets into `dist/`, and fails if any required source image is absent. Vercel runs `npm run build` and serves `dist/`.
 
 ## Credit
 
-Palettes are taken from paintings by **jaka lodhang**. The beasts are generated and
-are not the artist's work. Shape and interaction owe an obvious debt to
-[HEADDDS](https://headdds.alxxvine.com) by alxxvine, which is the same idea done with
-procedural 3D heads — go and look at it.
+Art references supplied by the project owner, credited in the supplied material to **jaka lodhang**. Name-to-creature interaction inspired by [HEADDDS](https://headdds.alxxvine.com/) by **alxxvine**.

@@ -1,83 +1,175 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>BESTIARY — every beast is a number</title>
-<meta name="description" content="Type a name and it becomes a collage-beast. No models, no textures, no image files — every mark is drawn from one number.">
-<meta name="theme-color" content="#08080A">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2308080A'/%3E%3Cpath d='M4 12 L8 3 L12 12 Z' fill='%23C8952D'/%3E%3C/svg%3E">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap">
-<link rel="stylesheet" href="assets/css/app.css">
-</head>
-<body>
-
-<canvas id="wall" aria-hidden="true"></canvas>
-<canvas id="undergrowth" aria-hidden="true"></canvas>
-<div id="grain" aria-hidden="true"></div>
-
-<header>
-  <button class="brand" id="home" type="button">
-    BESTIARY
-    <small>EVERY BEAST IS A NUMBER</small>
-  </button>
-  <div class="header-right">
-    <button class="linkish mono" id="stranger" type="button">show a stranger</button>
-    <a class="linkish mono" id="archivelink" href="https://lodhang-archive.vercel.app">the archive</a>
-  </div>
-</header>
-
-<main>
-  <!-- SUMMON -->
-  <section class="summon" id="view-summon">
-    <h1>Make your beast</h1>
-
-    <!-- The summon square sits inside the rail, not below it: the beasts
-         already in the room stand on either side of the empty plinth. -->
-    <div class="rail" id="rail" aria-label="Beasts already in the menagerie">
-      <button class="plus" id="plus" type="button" aria-label="Summon a beast at random">+</button>
-    </div>
-
-    <p class="or micro">OR</p>
-
-    <form class="namebar" id="namebar">
-      <label class="sr-only" for="nameinput">Type a name</label>
-      <input id="nameinput" type="text" placeholder="type your name" autocomplete="off"
-             spellcheck="false" maxlength="48">
-      <button class="btn mono" type="submit">Summon</button>
-    </form>
-
-    <p class="micro" style="color:var(--n-iron);max-width:46ch">
-      The same name always makes the same beast. Nothing is stored and nothing is
-      uploaded — the number is the whole animal.
-    </p>
-  </section>
-
-  <!-- RESULT -->
-  <section class="result" id="view-result" hidden>
-    <div class="result-canvas is-lit" id="stage"></div>
-    <div class="plate" id="plate"></div>
-  </section>
-</main>
-
-<footer>
-  <span class="micro">DRAWN IN CODE. NO MODELS, NO TEXTURES, NO IMAGE FILES.</span>
-  <span class="micro">PALETTES AFTER <a id="artistlink" href="https://lodhang-archive.vercel.app">JAKA LODHANG</a></span>
-</footer>
-
-<div id="status" class="mono" role="status" aria-live="polite"></div>
-
-<noscript>
-  <div style="padding:22vh 8vw;max-width:60ch">
-    <h1 style="font-family:Georgia,serif;color:#efede6">BESTIARY</h1>
-    <p>Every beast here is generated from a number, in the browser. That needs
-       JavaScript, so there is nothing to show without it.</p>
-  </div>
-</noscript>
-
-<script type="module" src="assets/js/app.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Bestiary — find your other nature</title>
+    <meta
+      name="description"
+      content="A cabinet of impossible creatures. Turn your name into a surreal painted collage, discover a stranger, and keep your beast."
+    />
+    <meta name="theme-color" content="#141714" />
+    <meta property="og:title" content="Bestiary — find your other nature" />
+    <meta
+      property="og:description"
+      content="Part human. Part animal. Entirely yours."
+    />
+    <meta property="og:image" content="/assets/art/ram.webp" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23141714'/%3E%3Ctext x='10' y='30' font-family='Georgia' font-style='italic' font-size='32' fill='%23f0efdf'%3Eb%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/app.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <button class="brand" id="home" aria-label="Bestiary home">
+        <span class="brand-mark" aria-hidden="true">✳</span> bestiary<span
+          class="brand-period"
+          >.</span
+        ></button
+      ><span class="masthead-note micro"
+        >A CABINET OF IMPOSSIBLE CREATURES</span
+      >
+      <nav aria-label="Main navigation">
+        <button id="cabinet-button">
+          Your cabinet <span id="saved-count">0</span></button
+        ><button
+          id="about-button"
+          class="about-button"
+          aria-label="About Bestiary"
+        >
+          ?
+        </button>
+      </nav>
+    </header>
+    <main>
+      <section id="view-summon" class="summon" aria-labelledby="summon-heading">
+        <div class="intro">
+          <p class="eyebrow micro">HUMAN, MEET YOUR OTHER HALF</p>
+          <h1 id="summon-heading">Find your <em>other nature.</em></h1>
+          <p>Part human. Part animal. A little out of this world.</p>
+        </div>
+        <div class="rail-shell">
+          <div class="rail" id="rail" aria-label="Discover the menagerie">
+            <button
+              id="plus"
+              class="summon-card"
+              aria-label="Discover a random beast"
+            >
+              <span class="micro">THE UNDISCOVERED</span
+              ><span class="plus-symbol" aria-hidden="true">+</span
+              ><span>Your beast goes here</span
+              ><span class="micro">LET CHANCE DECIDE ↗</span>
+            </button>
+          </div>
+        </div>
+        <div class="summon-controls">
+          <p class="form-label">Every name has a beast. Find yours.</p>
+          <form id="namebar" class="namebar">
+            <label for="nameinput" class="sr-only">Your name</label
+            ><input
+              id="nameinput"
+              placeholder="Your name, or someone else's"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="48"
+              aria-describedby="name-hint"
+            /><button class="btn primary" type="submit">
+              Find my beast <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p id="name-hint" class="field-hint">
+            Same name. Same creature. Every time.
+          </p>
+          <div class="alternative-actions">
+            <button id="stranger">
+              Surprise me <span aria-hidden="true">⤨</span></button
+            ><span aria-hidden="true">·</span
+            ><button id="photo-button">
+              Use a photo <span aria-hidden="true">↗</span></button
+            ><input id="photo-input" type="file" accept="image/*" hidden />
+          </div>
+        </div>
+        <p class="loading micro" id="loading" role="status">
+          OPENING THE CABINET…
+        </p>
+      </section>
+      <section
+        id="view-result"
+        class="result"
+        hidden
+        aria-labelledby="beast-title"
+      >
+        <button id="back" class="back-link">← Back to the menagerie</button>
+        <div id="stage" class="artwork-stage"></div>
+        <div id="plate" class="plate"></div>
+      </section>
+    </main>
+    <footer>
+      <span class="footer-left"
+        ><span class="tiny-star" aria-hidden="true">✳</span> An experiment in
+        other natures.</span
+      ><span class="footer-right"
+        >Inspired by old worlds. Made for this one.
+        <button id="credits-button">About the art ↗</button></span
+      >
+    </footer>
+    <dialog id="about-dialog" aria-labelledby="about-title">
+      <button class="dialog-close" aria-label="Close about dialog">×</button>
+      <p class="micro">THE IDEA BEHIND THE BEASTS</p>
+      <h2 id="about-title">A beautifully<br /><em>strange encounter.</em></h2>
+      <p>
+        Bestiary is a digital cabinet of impossible creatures. Give it a name
+        and discover a figure somewhere between animal, human, and an old
+        painting.
+      </p>
+      <p>
+        Fragments from six supplied painting studies are cut and recombined in
+        your browser. Your name chooses the head, setting, fragments, and marks.
+        The same name always returns the same composition.
+      </p>
+      <p>
+        The source artwork is drawn from the supplied references, credited to
+        <a
+          href="https://lodhang-archive.vercel.app"
+          target="_blank"
+          rel="noreferrer"
+          >jaka lodhang</a
+        >. The remixes are an independent experiment, not new works by the
+        artist. The playful interaction is inspired by
+        <a href="https://headdds.alxxvine.com/" target="_blank" rel="noreferrer"
+          >HEADDDS by alxxvine</a
+        >.
+      </p>
+      <p class="privacy-note">
+        Names stay in your browser and shareable URLs. Photos are hashed on your
+        device, never uploaded, and are not used as a likeness. Your cabinet is
+        saved only in this browser.
+      </p>
+    </dialog>
+    <dialog id="cabinet-dialog" aria-labelledby="cabinet-title">
+      <button class="dialog-close" aria-label="Close cabinet">×</button>
+      <p class="micro">YOUR PRIVATE MENAGERIE</p>
+      <h2 id="cabinet-title">The keepers.</h2>
+      <div id="cabinet-grid"></div>
+    </dialog>
+    <div id="status" role="status" aria-live="polite"></div>
+    <noscript
+      ><p class="noscript">
+        Bestiary needs JavaScript to compose your creature. Enable it and reload
+        to enter the cabinet.
+      </p></noscript
+    >
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
 </html>

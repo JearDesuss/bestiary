@@ -6,3 +6,7 @@ node_modules/
 shots/
 
 .vercel
+
+output/
+.playwright-cli/
+dist/
