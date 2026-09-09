@@ -1,0 +1,9 @@
+Use case: stylized-concept.
+Asset type: concept source for a real 3D character, intended for modelling and Three.js rendering.
+Input images: reference images for artistic direction only. Do not reuse or collage their subjects or reproduce their compositions.
+Create ONE original full-body ram-headed humanoid court guardian, isolated on a plain neutral grey background. Three-quarter front view, entire figure and feet visible, arms slightly separated from torso, legs separated, unobstructed anatomy, empty hands.
+Anatomy: realistic adult human proportions, a detailed ram face with curling ribbed horns, natural eyes and wool. This is an uncanny, dignified creature from an old painting, not a cute mascot or toy.
+Costume: tarnished engraved Renaissance breastplate, heavy crimson velvet cape, asymmetrical ivory feather ornament, old gold seams and a few tropical flowers on one shoulder. Translate the supplied references' material richness and surreal animal-human combinations into a physically coherent sculpture.
+Surface: dense hand-painted oil pigment, subtle cracked varnish, scraped gold, deep blue-green patina, muted magenta and turquoise fragments. Readable material separation between fur, cloth, feathers and metal.
+Lighting: broad soft key light from upper left, gentle fill, enough contrast to describe volume without hiding anatomy in shadow.
+Constraints: no environment, no montage, no frame, no text, no watermark, no extra characters, no floating parts, no 2D cutout aesthetic, no rounded plastic toy style, no polished chrome. Background is only a clean modelling aid. The result must make the head, body, limbs and cape understandable as a single real three-dimensional character.

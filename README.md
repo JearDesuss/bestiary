@@ -1,50 +1,55 @@
-﻿# Bestiary
+﻿# Bestiary 3D
 
-Find your other nature. A name becomes a repeatable, surreal collage creature.
+A Vite + Three.js menagerie with six animal-headed characters, reproducible name-based variation, and a rotatable sculpture viewer.
 
-Production: https://bestiary-livid.vercel.app
+## Current scope
 
-## What it does
+The app now renders **real mesh geometry** with PBR materials, shadows, human proportions, animal heads, articulated armour, draped cloaks, wings and botanical ornament. Source paintings are no longer displayed as characters or loaded as character textures.
 
-- Name lookup with case, whitespace and Unicode normalization.
-- Six animal natures, six source settings, head swaps, torn fragments and seeded paint marks.
-- Random discovery and a touch-scrollable portrait rail.
-- Local photo hashing: the same file produces the same creature. Photos are never uploaded and are not interpreted as a likeness.
-- Stable share links, browser back/forward navigation and 1600 × 2400 PNG downloads.
-- A local cabinet of up to 60 saved creatures, with remove and reopen actions.
-- Keyboard access, native modal focus management, reduced motion and mobile layouts.
+The current meshes are authored procedurally. The specifically requested **GPT Image 2.5 Sunburst concept generation remains pending API access**. See [the asset workflow](art-direction/GENERATION.md) and [the prepared ram prompt](art-direction/ram-character.txt). Do not describe the current meshes as GPT-generated or as reconstructions of generated images.
 
-The artwork uses fragments from the supplied screenshot references. It is not freshly generated AI artwork: image generation was unavailable during this iteration. See [ART_SOURCES.md](ART_SOURCES.md) for attribution and source mappings. The remixes are independent compositions, not new works by the reference artist.
-
-## Run and check
-
-Requires Node 22+ and Python 3 for the local server.
+## Run
 
 ```sh
 npm ci
 npm run dev
-# http://127.0.0.1:8789
-```
-
-In another terminal:
-
-```sh
+# http://127.0.0.1:8790
 npm test
 npx playwright install chromium
 npm run test:browser
 npm run build
+npm run preview
 ```
 
-Browser checks cover name determinism, PNG export dimensions, sharing, saved cabinet persistence, photo hashing, invalid seeds, markup safety, history, focus, keyboard access and 320/390/768px layouts. Captures and reports go into ignored `output/playwright/`.
+Node 22+ recommended. Vercel builds with Vite and serves `dist/`. Three.js is cached as a separate engine chunk. GLB import and export are loaded only when needed. No API credentials or paid generation services are used by the browser.
 
-## Art and rendering
+## Controls and features
 
-`assets/js/collage.js` selects a source setting and an animal head, places the head at a recorded anatomical landmark, and adds seeded torn fragments. Canvas source crops exclude captured social UI. Source files are only WebP-encoded for delivery; the live canvas performs composition. There is no runtime image-generation API, backend or paid service.
+- A name produces the same anatomy, palette and accessories.
+- Drag to rotate through all sides; scroll or pinch to zoom.
+- Focus the model and use arrow keys to rotate, +/- to zoom, Home to reset.
+- Save the current view as a 1600 × 2400 PNG.
+- Download the actual character geometry as a GLB 2.0 model.
+- Save and reopen creatures in a local cabinet; copy stable links.
+- Photo input hashes the file locally; it neither uploads nor reconstructs a likeness.
 
-`assets/js/rng.js` maps names to eight-digit seeds. The renderer uses only seeded randomness. The artwork system is version 2; older bare name/seed links resolve to the current visual renderer. The historical procedural renderer remains in `beast.js` and its supporting modules for reference.
+The 3D cabinet uses a separate storage key from the former collage cabinet, because the artwork system changed. Version 3 links encode the name or seed; older bare links use the current renderer.
 
-`DESIGN.md` records the design vocabulary. The production build copies only HTML and assets into `dist/`, and fails if any required source image is absent. Vercel runs `npm run build` and serves `dist/`.
+## Architecture
 
-## Credit
+- `assets/js/character.js`: deterministic anatomy and PBR mesh authoring, six animal heads, cloth folds, horn tubes, feather geometry, ornaments and material palettes.
+- `assets/js/viewer.js`: WebGL renderer, environment and lights, OrbitControls, still captures, GLB export and generated-GLB loading hook.
+- `assets/js/app.js`: discovery, navigation, local cabinet, share and download actions.
+- `vite.config.js`: local server, production bundling and engine chunk.
 
-Art references supplied by the project owner, credited in the supplied material to **jaka lodhang**. Name-to-creature interaction inspired by [HEADDDS](https://headdds.alxxvine.com/) by **alxxvine**.
+The viewer renders on demand, with no permanent animation loop. Gallery thumbnails are rendered from the same actual geometry using one shared renderer; the selected character uses an interactive WebGL canvas. Model resources are disposed when replaced.
+
+## Verification
+
+Unit tests verify all six characters have finite 3D geometry, depth and distinct anatomy, plus deterministic seeds. Browser checks verify pointer rotation changes the rendered image and camera angle, exported GLB files contain full meshes, name/URL reproduction, PNG dimensions, sharing, cabinet persistence, photo hashing, keyboard control, focus restoration and 320/390/768px layouts. Reports are in ignored `output/playwright/`.
+
+## Art direction
+
+Surreal animal-human combinations and material colours are guided by the project owner's supplied painting references, credited to **jaka lodhang**. These sculptures are independently authored and are not the artist's work. The discovery interaction follows [HEADDDS](https://headdds.alxxvine.com/) by alxxvine.
+
+Historical 2D renderers and their source encodings remain in the repository for reference and are excluded from the Vite production dependency graph.

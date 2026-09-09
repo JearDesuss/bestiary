@@ -16,3 +16,5 @@ The files are WebP encodings of the supplied screenshots. `tools/prepare-art.mjs
 Animal fragments: ram from ram.webp; goose and stag from goose.webp; tiger and cat from tiger.webp; toucan from toucan.webp. The source settings come from all six files. Some detail is limited by the size of fragments in the supplied screenshots, especially the small cat head.
 
 Image generation was attempted using the built-in tool. The first request failed with a network error and the retry returned a usage limit. No generated AI image from those calls is included in this repository. Future replacement art should keep the six anatomical landmark mappings in sync with the renderer.
+
+Version 3 note: these historical encodings are no longer used in the Vite/Three.js site's production dependency graph. The 3D model materials use colours and procedural vertex paint, not screenshots. See art-direction/GENERATION.md for the pending requested generation workflow.
