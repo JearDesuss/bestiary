@@ -10,3 +10,7 @@ shots/
 output/
 .playwright-cli/
 dist/
+
+.env
+.env.*
+!.env.example

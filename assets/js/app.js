@@ -1,14 +1,10 @@
 import { seedFromName } from "./rng.js";
-import {
-  SPECIES,
-  composition,
-  renderCollage,
-  loadArt,
-  validSeed,
-} from "./collage.js";
+import { SPECIES, composition, validSeed } from "./character.js";
+import { BeastViewer } from "./viewer.js";
+let viewer;
 
 const $ = (s) => document.querySelector(s);
-const STORAGE = "bestiary-cabinet-v2";
+const STORAGE = "bestiary-cabinet-v3";
 let current = null,
   ready = false,
   timer,
@@ -49,7 +45,7 @@ function persist(next) {
     return true;
   } catch {
     status(
-      "Your browser could not save this. You can still download the painting.",
+      "Your browser could not save this. You can still download the character.",
     );
     return false;
   }
@@ -70,7 +66,7 @@ function setURL(seed, name, push) {
   if (seed !== null) {
     if (name) url.searchParams.set("name", name);
     else url.searchParams.set("seed", seed);
-    url.searchParams.set("v", "2");
+    url.searchParams.set("v", "3");
   }
   if (url.href !== location.href)
     history[push ? "pushState" : "replaceState"](null, "", url);
@@ -84,23 +80,32 @@ function showHome(push = true) {
 }
 function showResult(seed, name = "", push = true, focus = true) {
   if (!ready)
-    return status("The paintings are still loading. Try again in a moment.");
+    return status("The characters are still loading. Try again in a moment.");
   const g = composition(seed);
   current = { g, name };
   $("#view-summon").hidden = true;
   $("#view-result").hidden = false;
-  const cv = renderCollage(g, 1000);
-  $("#stage").replaceChildren(cv);
-  const cap = document.createElement("div");
-  cap.className = "art-caption micro";
-  cap.innerHTML = `<span>BESTIARY · ${String(seed).padStart(8, "0")}</span><span>COLLAGE / ${SPECIES[g.head].name.toUpperCase()}</span>`;
-  $("#stage").append(cap);
+  viewer.setModel(g);
+  viewer.attach($("#stage"));
   $("#plate").innerHTML =
-    `<p class="micro">YOUR OTHER NATURE · ${String(seed).padStart(8, "0")}</p><h2 id="beast-title" tabindex="-1">${g.title}</h2><p class="beast-description">${SPECIES[g.head].line}</p>${name ? `<p class="for-name">An other nature for ${escapeHTML(name)}.</p>` : ""}<dl class="traits"><div><dt>Nature</dt><dd>${SPECIES[g.head].name}</dd></div><div><dt>Borrowed material</dt><dd>${SPECIES[g.body].dress}</dd></div><div><dt>Habitat</dt><dd>${SPECIES[g.body].world}</dd></div><div><dt>Composition</dt><dd>${"Reassembled portrait"}</dd></div></dl><div class="actions"><button class="btn primary" id="savepng">Download artwork ↓</button><button class="btn" id="keep" aria-pressed="false">Keep this beast +</button></div><div class="result-secondary"><button id="copylink">Copy link ↗</button><button id="again">Meet another ⤨</button></div><p class="plate-note">A small piece of the impossible. Yours to keep.</p>`;
+    `<p class="micro">YOUR OTHER NATURE · ${String(seed).padStart(8, "0")}</p><h2 id="beast-title" tabindex="-1">${g.title}</h2><p class="beast-description">${SPECIES[g.head].line}</p>${name ? `<p class="for-name">An other nature for ${escapeHTML(name)}.</p>` : ""}<dl class="traits"><div><dt>Nature</dt><dd>${SPECIES[g.head].name}</dd></div><div><dt>Palette</dt><dd>${g.palette.name}</dd></div><div><dt>Silhouette</dt><dd>${g.wings ? "Feathered" : "Cloaked"}</dd></div><div><dt>Headpiece</dt><dd>${g.crown ? "Crowned" : "Uncrowned"}</dd></div></dl><div class="actions"><button class="btn primary" id="savepng">Save image ↓</button><button class="btn" id="keep" aria-pressed="false">Keep this beast +</button></div><div class="result-secondary"><button id="copylink">Copy link ↗</button><button id="saveglb">Download 3D</button><button id="again">Meet another ⤨</button></div><p class="plate-note">Drag to turn / Scroll or pinch to zoom / Arrow keys to rotate</p>`;
   $("#savepng").addEventListener("click", savePNG);
   $("#keep").addEventListener("click", keep);
   $("#copylink").addEventListener("click", copyLink);
   $("#again").addEventListener("click", random);
+  $("#saveglb").addEventListener("click", async () => {
+    const seed = current.g.seed;
+    try {
+      const data = await viewer.exportGLB();
+      downloadBlob(
+        new Blob([data], { type: "model/gltf-binary" }),
+        `bestiary-${seed}.glb`,
+      );
+      status("3D model ready to download.");
+    } catch {
+      status("The model could not be exported. Please try again.");
+    }
+  });
   setURL(seed, name, push);
   document.title = `${g.title} — Bestiary`;
   updateSaved();
@@ -138,11 +143,19 @@ async function copyLink() {
     status("Copy the selected link to share your beast.");
   }
 }
+function downloadBlob(blob, name) {
+  const a = document.createElement("a"),
+    url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 function savePNG() {
   const button = $("#savepng");
   const g = current.g;
   button.disabled = true;
-  const cv = renderCollage(g, 1600);
+  const cv = viewer.capture(1600, 2400);
   cv.toBlob((blob) => {
     button.disabled = false;
     if (!blob)
@@ -177,7 +190,7 @@ function portrait(seed, name = "", angle = 0) {
   button.className = "portrait";
   button.style.setProperty("--angle", `${angle}deg`);
   button.setAttribute("aria-label", `Meet ${g.title}`);
-  button.append(renderCollage(g, 360));
+  button.append(viewer.thumbnail(g, 360));
   const cap = document.createElement("span");
   cap.className = "portrait-caption";
   cap.innerHTML = `<span>${SPECIES[g.head].name}</span><span>${String(seed).padStart(8, "0")}</span>`;
@@ -299,14 +312,14 @@ $("#namebar").addEventListener("submit", (e) => {
 $("#plus").addEventListener("click", random);
 $("#stranger").addEventListener("click", random);
 $("#photo-button").addEventListener("click", () => {
-  if (!ready) return status("The paintings are still loading.");
+  if (!ready) return status("The characters are still loading.");
   $("#photo-input").click();
 });
 $("#photo-input").addEventListener("change", photo);
 for (const id of ["about-button", "credits-button"])
   $("#" + id).addEventListener("click", () => $("#about-dialog").showModal());
 $("#cabinet-button").addEventListener("click", () => {
-  if (!ready) return status("The paintings are still loading.");
+  if (!ready) return status("The characters are still loading.");
   openCabinet();
 });
 for (const dialog of document.querySelectorAll("dialog")) {
@@ -339,7 +352,9 @@ addEventListener("keydown", (e) => {
 });
 updateSaved();
 try {
-  await loadArt();
+  viewer = new BeastViewer();
+  viewer.onContextLost = () =>
+    status("The 3D display was interrupted. Reload to restore it.");
   ready = true;
   buildRail();
   $("#loading").hidden = true;
@@ -347,8 +362,10 @@ try {
   window.__ready = true;
 } catch (error) {
   $("#loading").textContent =
-    "The paintings could not load. Reload to try again.";
-  status("Could not load the artwork. Check your connection and reload.");
+    "WebGL could not start. Enable hardware acceleration and reload.";
+  status(
+    "Your browser could not start the 3D display. Enable hardware acceleration and reload.",
+  );
   console.error(error);
 }
 window.__diag = {
@@ -361,5 +378,8 @@ window.__diag = {
   get focus() {
     return current?.g.seed ?? null;
   },
-  webgl: false,
+  webgl: true,
+  get geometry() {
+    return viewer?.diagnostics();
+  },
 };

@@ -12,3 +12,11 @@ Components: masthead, portrait rail, random invitation, name form, photo seed, a
 Do: prioritise artwork size; keep direct lookup; stable seeds; visible collage seams; legible labels; keyboard/touch support; honest provenance.
 Don't: flat cartoon art; fabricated rarity; bright decorative chrome; implementation slogans in discovery; continuous motion; stretched canvases; claims of infinite species.
 Motion: 160ms CSS transform/opacity feedback, cubic-bezier(.23,1,.32,1); fine pointer hover only; reduced motion removes movement.
+
+## Version 3: sculpture room
+
+The reference's free-standing three-dimensional characters are the priority. Replace picture mats with transparent-background views of real meshes, and reduce the hero to a small monospace invitation above the discovery rail. The selected creature is a large interactive WebGL sculpture, with orbital camera control and a grounded shadow.
+
+The reference paintings guide creature anatomy, asymmetrical feather/flower ornament, aged armour, draped crimson cloth and tropical accent colours. The current implementation is procedural geometry with vertex-painted PBR materials. GPT Image 2.5 art generation is a required outstanding asset step, not an accomplished part of this design.
+
+Animation purpose: direct manipulation and spatial understanding. OrbitControls responds to drag/pinch and keyboard with no ambient motion or inertia. Render only after interaction, resize or model changes. Maintain one shared WebGL renderer and dispose replaced meshes/materials.
